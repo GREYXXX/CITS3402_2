@@ -4,3 +4,8 @@
 #include <mpi.h>
 #include <time.h>
 #include <unistd.h>
+
+typedef struct{
+	int vexnum;
+	int **matrix;
+}Graph
