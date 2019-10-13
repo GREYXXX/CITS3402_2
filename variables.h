@@ -11,4 +11,4 @@ typedef struct{
 }Graph;
 
 extern Graph readfile(char *);
-extern int floyd(Graph);
+extern int Floyd(Graph);
