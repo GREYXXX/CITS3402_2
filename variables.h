@@ -8,4 +8,7 @@
 typedef struct{
 	int vexnum;
 	int **matrix;
-}Graph
+}Graph;
+
+extern Graph readfile(char *);
+extern int floyd(Graph);
