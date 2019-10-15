@@ -9,7 +9,7 @@ int Floyd(Graph g){
 		D[a] = (int*)malloc(n*sizeof(int));
 	}
     	int i,j,k;
-    	for(i=0;i<n;i++){//Initializing the  adjacency matrix;
+    	for(i=0;i<n;i++){
         	for(j=0;j<n;j++){
             		D[i][j] = g.matrix[i][j];
 			path[i][j] = j;
@@ -31,5 +31,11 @@ int Floyd(Graph g){
 			printf("shortest path is %d\n",D[i][j]);
 		}
 	}
+	for(int i = 0;i < n;i++){
+		free(D[i]);
+		free(path[i]);
+	}
+	free(D);
+	free(path);
 	return 0;
 }
