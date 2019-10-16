@@ -7,8 +7,8 @@ int Floyd(Graph g){
 		exit(1);
 	}
 
-	int n = g.vexnum;
-	fprintf(fp, "%d ", n);
+	int n = g.vexnum;	//Number of vertices
+	fprintf(fp, "%d ", n);	//Writes number of vertices to the output file 
 
 	int **path = (int**)malloc(n * sizeof(int*));
 	int **D = (int**)malloc(n * sizeof(int*));
@@ -28,12 +28,13 @@ int Floyd(Graph g){
         	for(i=0;i<n;i++){
             		for(j=0;j<n;j++){
                 		if(D[i][j]>D[i][k]+D[k][j]){
-                    			D[i][j]=D[i][k]+D[k][j];
-                    			path[i][j]=path[i][k];
+                    			D[i][j]=D[i][k]+D[k][j];	//Stores the current shortest path
+                    			path[i][j]=path[i][k]; 		//Stores the number of nodes to get to the shortest path
                 		}
             		}
         	}
     	}
+	//All elements in D are now the shortest paths
 	 for(i=0;i<n;i++){
          	for(j=0;j<n;j++){
 			//printf("shortest path is %d\n",D[i][j]);
