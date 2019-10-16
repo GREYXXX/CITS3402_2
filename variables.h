@@ -6,9 +6,11 @@
 #include <unistd.h>
 
 typedef struct{
-	int vexnum;
+	int vexnum;	//Number of vertices
 	int **matrix;
 }Graph;
 
-extern Graph readfile(char *);
+Graph p;
+
+extern void readfile(char *);
 extern int Floyd(Graph);

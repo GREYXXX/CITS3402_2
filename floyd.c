@@ -1,7 +1,15 @@
 #include "variables.h"
 
 int Floyd(Graph g){
+	FILE *fp = fopen("output.out", "w");
+	if(fp == NULL) {
+		printf("Error!");
+		exit(1);
+	}
+
 	int n = g.vexnum;
+	fprintf(fp, "%d ", n);
+
 	int **path = (int**)malloc(n * sizeof(int*));
 	int **D = (int**)malloc(n * sizeof(int*));
 	for (int a = 0;a < n; a++){
@@ -28,7 +36,8 @@ int Floyd(Graph g){
     	}
 	 for(i=0;i<n;i++){
          	for(j=0;j<n;j++){
-			printf("shortest path is %d\n",D[i][j]);
+			//printf("shortest path is %d\n",D[i][j]);
+			fprintf(fp, "%d ", D[i][j]);
 		}
 	}
 	for(int i = 0;i < n;i++){
@@ -37,5 +46,6 @@ int Floyd(Graph g){
 	}
 	free(D);
 	free(path);
+	fclose(fp);
 	return 0;
 }
