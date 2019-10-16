@@ -10,7 +10,6 @@ void readfile(char *arg)
         }
        
         int *chunk = malloc(sizeof(int));
-        int k = 0;
 	got1 = fread(chunk, sizeof(int), 1, fp);
 	p.vexnum = *chunk;
 
