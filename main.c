@@ -4,7 +4,7 @@ int main(int argc, char *argv[]){
 	readfile(argv[1]);
 
 	clock_t start = clock();
-	Floyd(p);
+	Floyd();
 	clock_t end = clock();
 
 	double time_taken = (double)(end - start) / CLOCKS_PER_SEC;
