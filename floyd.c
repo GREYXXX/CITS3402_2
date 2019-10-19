@@ -1,5 +1,23 @@
 #include "variables.h"
 
+//Computes the shortest path for a given parameters
+void computePath(int k, int n, int start, int end)
+{
+	if(start != 0) {
+		start = start / n; 	//The row to start on
+	}	
+	end = end / n;			//The row to end on
+	for(int i = start; i < end; i++) {
+		for(int j = 0; j < n; j++) {
+			if(p.matrix[i][j] > p.matrix[i][k] + p.matrix[k][j]) {
+				p.matrix[i][j] = p.matrix[i][k] + p.matrix[k][j];
+			
+			}
+		}
+	}
+}
+
+
 int Floyd(){
 	FILE *fp = fopen("output.out", "w");
 	if(fp == NULL) {
@@ -10,80 +28,50 @@ int Floyd(){
 	int n = p.vexnum;	//Number of vertices
 	fprintf(fp, "%d ", n);	//Writes number of vertices to the output file 
 
-	int **path = (int**)malloc(n * sizeof(int*));
-	int **D = (int**)malloc(n * sizeof(int*));
-	
- 
     	int world_size,	//Total number of ranks or the number of processes across all nodes
 	world_rank,	//Rank
-	numworkers;	//Number of processors/workers
-	MPI_Status status;
-	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
-	char processor_name[MPI_MAX_PROCESSOR_NAME];
-        int name_len;
-        MPI_Get_processor_name(processor_name, &name_len);
- 
-        printf("processor %s, rank %d/%d processors.\n", processor_name, world_rank, world_size);
-	numworkers = world_size - 1;
-	if(world_rank == 0) { 	//MASTER rank
-		printf("MASTER: INITIALISNG GRAPH\n");
-		//GRAPH INITIALISATION
-		for (int a = 0;a < n; a++){
-		path[a] = (int*)malloc(n*sizeof(int));
-		D[a] = (int*)malloc(n*sizeof(int));
-	}
-		int i,j,k;
-		for(i=0;i<n;i++){
-			for(j=0;j<n;j++){
-				D[i][j] = g.matrix[i][j];
-				path[i][j] = j;
-			}
-		}
+	max_process_id;	//Max ID of processors/workers
+		
+	int processPartition = (n * n) / world_size ; //Length of each partition that will be assigned to a process
 	
-	int average_row = n / numworkers;
-	//int extra = n % numworkers;
-	int chunksize = (n * n) / world_size;
-	//int tag1 = 2;
-	//int tag2 = 1;
-	int offset = chunksize;
-	for(int k = 1; k <= numworkers; k++) {
-		printf("Sending %d rows to task %d offset = %d\n", average_row, k, offset);
-		MPI_Send(&offset, 1, MPI_INT, k, MPI_ANY_TAG, MPI_COMM_WORLD);
-		MPI_Send(&p[offset], chunksize, MPI_INT, k, MPI_ANY_TAG, MPI_COMM_WORLD);
-		printf("Sent %d elements to task %d offset = %d\n");
-		offset = offset + chunksize;
-	}
-	//Master does its work
-	offset = 0;
-		
-		
-	}
+	for(int k = 1; k <= max_process_id; k++) { 	//k is both the intermediate vertex and the process id
+		MPI_Status status;
+		MPI_Init(&argc, &argv);
+		MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+		MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    	for(k=0;k<n;k++){ //Keeps track of the outer loop
-        	for(i=0;i<n;i++){ //Keeps track of each row
-            		for(j=0;j<n;j++){ //Keeps track of each column
-                		if(D[i][j]>D[i][k]+D[k][j]){
-                    			D[i][j]=D[i][k]+D[k][j];	//Stores the current shortest path
-                    			path[i][j]=path[i][k]; 		//Stores the number of nodes to get to the shortest path
-                		}
-            		}
-        	}
-    	}
-	//All elements in D are now the shortest paths
+		char processor_name[MPI_MAX_PROCESSOR_NAME];
+		int name_len;
+		MPI_Get_processor_name(processor_name, &name_len);
+	 
+		printf("processor %s, rank %d/%d processors.\n", processor_name, world_rank, world_size);
+		max_process_id = world_size - 1;
+
+		printf("Sending %d elements to task %d\n", processPartition, k);
+		//Create a buffer that will hold a subset of array D1
+		//int *D_buffer = malloc(sizeof(int) * processPartition);
+
+		//Scatter the elements across all processes
+		//MPI_Scatter(&(D1[0][0]), processPartition, MPI_INT, D_buffer, processPartition, MPI_INT, 0, MPI_COMM_WORLD);
+		int start = processPartition * world_rank;
+		int end = processPartition * (world_rank + 1);
+		computePath(k, n, start, end);	
+		
+		MPI_Finalize();
+	}
+		
+	//All elements in p.matrix are now the shortest paths
 	 for(i=0;i<n;i++){
          	for(j=0;j<n;j++){
-			//printf("shortest path is %d\n",D[i][j]);
-			fprintf(fp, "%d ", D[i][j]);
+			//printf("shortest path is %d\n",p.matrix[i][j]);
+			fprintf(fp, "%d ", p.matrix[i][j]);
 		}
 	}
 	for(int i = 0;i < n;i++){
-		free(D[i]);
+		free(D1[i]);
 		free(path[i]);
 	}
-	free(D);
+	free(D1);
 	free(path);
 	fclose(fp);
 	return 0;
