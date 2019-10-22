@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
 	int name_len;
 	MPI_Get_processor_name(processor_name, &name_len);
 
-	int rc = MPI_File_open(MPI_COMM_WORLD, "16.in", MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+	int rc = MPI_File_open(MPI_COMM_WORLD, "4.in", MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
 	if(rc) {
 		if(rank == 0) {
 			fprintf(stderr, "%s: Could not open file %s\n", argv[0], "16.in");
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
 		//printf("Integers are: %d, %d, %d, %d, %d\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4]);
 		printf("Number of vertices is %d\n", *vertexNum);
 	}
-	mpi_bcast(vertexNum, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(vertexNum, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
