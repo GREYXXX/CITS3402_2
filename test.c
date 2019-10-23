@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 	rank;
 	
 	int *vertexNum;
-	clock_t start, end;
+	clock_t start_time, end_time;
 
 	MPI_File fh;
 	MPI_Status status;
@@ -45,8 +45,6 @@ int main(int argc, char** argv) {
 	}
 	MPI_Bcast(vertexNum, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	MPI_Barrier(MPI_COMM_WORLD);
-
 	int processRow = (*vertexNum) / size; // Number of rows that each process deals with
 	int count = processRow * (*vertexNum); //Number of elements each process deals with
 	int offset = (count * sizeof(int) * rank) + 4; //File position each process starts at
@@ -57,8 +55,6 @@ int main(int argc, char** argv) {
 
 	//Each process reads the portion of the file that it is allocated
 	MPI_File_read_at_all(fh, offset, &(buffer[0][0]), count, MPI_INT, MPI_STATUS_IGNORE);
-
-	//printf("Process:%d First Number: %d\n", rank, buffer[0][0]);
 
 	//Declare and initialise a contiguous array of pointers
 	int (*matrix)[*vertexNum];
@@ -73,7 +69,9 @@ int main(int argc, char** argv) {
 		}
 	}
 	}*/
-
+	if(rank == 0) {
+		start_time = clock();
+	}
 
 	for(int k = 0; k < *vertexNum; k++) { 	//k is both the intermediate vertex and the process id
 		MPI_Bcast(&(matrix[0][0]), (*vertexNum)*(*vertexNum), MPI_INT, 0, MPI_COMM_WORLD);	
@@ -97,6 +95,10 @@ int main(int argc, char** argv) {
 	}
 
 	if(rank == 0) {
+		end_time = clock();
+		double time_taken = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		printf("Time taken: %f\n", time_taken);
+	
 		FILE *fp = fopen("output.out", "w");
 		if(fp == NULL) {
 			printf("Error!\n");
@@ -109,8 +111,12 @@ int main(int argc, char** argv) {
 				fprintf(fp, "%d ", matrix[i][j]);
 			}
 		}
+		fclose(fp);
 	}
 
+	free(buffer);
+	free(matrix);
+	
 	MPI_File_close(&fh);
         MPI_Finalize();
 
