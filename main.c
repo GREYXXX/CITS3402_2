@@ -10,22 +10,22 @@ int find_k(int k, int p, int n){
 	return k/(n/p);
 }
 
-void copy_row(int local_mat[], int n, intp, int k_row[], int k){
+void copy_row(int local_mat[], int n, int p, int k_row[], int k){
         int job_k = k % (n/p);
-        for(int j = 0; j < n; j++){
+	int j;
+        for(j = 0; j < n; j++){
                 k_row[j] = local_mat[job_k*n + j];
         }
 }
 
-int Floyd(int matrix[], int rank, int p, MPI_Comm comm){
+int floyd(int matrix[],int n, int rank, int p, MPI_Comm comm){
 	int *D = (int*)malloc(n * n * sizeof(int));
-	int *local_mat = (int*)malloc(n*n/p*sizeof(int))
-    	int i,j,k,temp;
+	int *local_mat = (int*)malloc(n*n/p*sizeof(int));
+    	int i,j,k,a,temp;
 	//Initializing D;
     	for(i=0;i<n;i++){
             	D[i] = matrix[i];
         }
-} 
 	//If root process, scatter matrix D;
 	if(rank == 0){
 		MPI_Scatter(D, n*n/p, MPI_INT, local_mat, n*n/p, MPI_INT, 0, comm)
@@ -33,17 +33,18 @@ int Floyd(int matrix[], int rank, int p, MPI_Comm comm){
 	//Starting floyd;
     	for(k=0;k<n;k++){
 		//Finding the process number of k-th row;
-		root = find_k(k,p,n);
+		int root = find_k(k,p,n);
+		int *k_row = malloc(sizeof(int)*n);
 		if(rank == root)
 			//Copy the k-th row numbers to the buffer k_row;
 			copy_row(local_mat, n, p, k_row, k);
 		MPI_Bcast(k_row, n, MPI_INT, root, comm);
-        	for(i=0;i < n/p;i++){
-            		for(j=0;j<n;j++){
-				temp = local_mat[i*n + k] + k_row[j];
-                		if(temp < local_mat[i*n + j]){
+        	for(a=0;a < n/p;a++){
+            		for(int j=0;j<n;j++){
+				temp = local_mat[a*n + k] + k_row[j];
+                		if(temp < local_mat[a*n + j]){
 					//Updating local_mat;
-                    			local_mat[i*n + j] = temp;
+                    			local_mat[a*n + j] = temp;
                 		}
             		}
         	}
@@ -52,7 +53,7 @@ int Floyd(int matrix[], int rank, int p, MPI_Comm comm){
 	write_mat(local_mat, n, rank, p,comm);
 	free(D);
 	free(k_row);
-	fclose(fp);
+	free(local_mat);
 	return 0;
 }
 
@@ -65,7 +66,7 @@ void write_mat(int local_mat[], int n, int rank, int p, MPI_Comm comm)
 		exit(1);
 	}
 	fprintf(fp, "%d", n);
-	int temp = NULL;
+	int *temp = NULL;
 	if(rank == 0){
 		temp = malloc(n*n*sizeof(int));
 		MPI_Gather(local_mat, n*n/p, MPI_INT, temp, n*n/p, MPI_INT, 0, comm);
@@ -90,7 +91,7 @@ int main(int argc, char *argv[]){
 	MPI_File fh;
 	MPI_Status status;
 	MPI_Init(&argc, &argv);
-	MPI_Comm comm;
+	MPI_Comm Comm;
 	Comm = MPI_COMM_WORLD;
 	MPI_Comm_rank(Comm, &rank); //ID of this process in that communicator
 	MPI_Comm_size(Comm, &size); //Number of processes in the communicator
@@ -136,9 +137,9 @@ int main(int argc, char *argv[]){
 		clock_t start = clock();
 	}
 	int n = *vertexNum;
-	MPI_Bcast(&n, 1, MPI_INT, 0, comm);	
+	MPI_Bcast(&n, 1, MPI_INT, 0, Comm);	
 	//readfile(argv[1]);
-	floyd(matrix, n, rank, p, Comm);
+	floyd(matrix, n, rank, size, Comm);
 	
 	if(rank == 0){
 		clock_t end = clock();
