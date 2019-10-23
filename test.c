@@ -1,3 +1,5 @@
+#Syukri Zainal 	Student ID: 21972786
+#Xi Rao         Student ID: 22435044
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
