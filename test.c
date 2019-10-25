@@ -1,6 +1,6 @@
 /*
 NAME:	Syukri Zainal Abidin	Student ID:	21972786
-	Gre					22222222
+	Xi Rao					22435044
 
 */
 #include <stdio.h>
@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	//Initialise COMM rank & size
+	//Declare COMM rank & size
 	int size,
 	rank;
 
@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
 	//Timer definitions
 	clock_t start_time, end_time;
 
+	//MPI declaractions
 	MPI_File fh;				//MPI File handle
         MPI_Init(&argc, &argv);			
         MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -41,14 +42,13 @@ int main(int argc, char** argv) {
 			fprintf(stderr, "%s: Could not open file %s\n", argv[0], argv[1]);
 		}
 		MPI_Finalize();
-		exit(2);
+		exit(EXIT_FAILURE);
 	}
 
 	vertexNum = malloc(sizeof(int));
 	//Root process reads the first element of the file which holds the number of vertices
 	if(rank == 0) {
 		MPI_File_read_at(fh, 0, vertexNum, 1, MPI_INT, MPI_STATUS_IGNORE);
-		//printf("Number of vertices is %d\n", *vertexNum);
 	}
 
 	//vertexNum is broadcasted to all processes
@@ -58,10 +58,8 @@ int main(int argc, char** argv) {
 	int count = processRow * (*vertexNum); 		//Number of elements each process deals with
 	int offset = (count * sizeof(int) * rank) + 4; 	//File position each process starts at
 
-	//Buffer stores the all the elements read by each process
+	//Buffer stores all the elements read by each process
 	int (*buffer)[*vertexNum] = malloc(sizeof *buffer * processRow);
-
-	//printf("Process %d ready with offset: %d and will process %d rows, No. vertices: %d\n", rank, offset, processRow, *vertexNum);
 
 	//Each process reads the portion of the file that it is allocated
 	MPI_File_read_at_all(fh, offset, &(buffer[0][0]), count, MPI_INT, MPI_STATUS_IGNORE);
@@ -72,14 +70,6 @@ int main(int argc, char** argv) {
 
 	//MPI_Gather gathers all the buffers together into a single matrix
 	MPI_Gather(&(buffer[0][0]), count, MPI_INT, &(matrix[0][0]), count, MPI_INT, 0, MPI_COMM_WORLD);
-
-/*	if(rank == 0) {	
-	for(int i = 0; i < *vertexNum; i++) { //ROW
-		for(int j = 0; j < *vertexNum; j++) { //COLUMN
-			printf("Matrix[%d][%d] is %d\n", i, j, matrix[i][j]);
-		}
-	}
-	}*/
 
 	//Timer to record length of time for Floyd-Warshall algorithm
 	if(rank == 0) {
@@ -94,9 +84,6 @@ int main(int argc, char** argv) {
 
 		for(int i = start; i < end; i++) { //ROW
 			for(int j = 0; j < *vertexNum; j++) { //COLUMN
-				//printf("Matrix[i][j] is Matrix[%d][%d] is %d\n", i, j, matrix[i][j]);
-				//printf("Matrix[i][k] is Matrix[%d][%d] is %d\n", i, k, matrix[i][k]);
-				//printf("Matrix[k][j] is Matrix[%d][%d] is %d\n", k, j, matrix[k][j]);
 				if(matrix[i][j] > matrix[i][k] + matrix[k][j]) {
 					matrix[i][j] = matrix[i][k] + matrix[k][j];
 			
@@ -107,15 +94,16 @@ int main(int argc, char** argv) {
 		MPI_Gather(&(matrix[start][0]), count, MPI_INT, &(matrix[0][0]), count, MPI_INT, 0, MPI_COMM_WORLD);
 	}
 
+	//Root process stops the timer and prints the matrix onto the output file
 	if(rank == 0) {
 		end_time = clock();
 		double time_taken = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 		printf("Time taken: %f\n", time_taken);
 	
-		FILE *fp = fopen("output.out", "w");
+		FILE *fp = fopen("file.out", "w");
 		if(fp == NULL) {
-			printf("Error!\n");
-			exit(1);
+			fprintf(stderr, "Could not open %s\n", "file.out");
+			exit(EXIT_FAILURE);
 		}
 
 		fprintf(fp, "%d ", *vertexNum);
