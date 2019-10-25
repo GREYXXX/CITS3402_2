@@ -105,12 +105,18 @@ int main(int argc, char** argv) {
 			fprintf(stderr, "Could not open %s\n", "file.out");
 			exit(EXIT_FAILURE);
 		}
+	
+		fwrite(vertexNum, sizeof(int), 1, fp);	
+		//fprintf(fp, "%d ", *vertexNum);
 
-		fprintf(fp, "%d ", *vertexNum);
 		for(int i = 0; i < *vertexNum; i++) {
+
+			fwrite(matrix[i], sizeof(int), *vertexNum, fp);
+		/*
 			for(int j = 0; j < *vertexNum; j++) {
 				fprintf(fp, "%d ", matrix[i][j]);
-			}
+			
+			}*/
 		}
 		fclose(fp);
 	}
