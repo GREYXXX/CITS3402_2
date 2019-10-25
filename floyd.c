@@ -107,16 +107,9 @@ int main(int argc, char** argv) {
 		}
 	
 		fwrite(vertexNum, sizeof(int), 1, fp);	
-		//fprintf(fp, "%d ", *vertexNum);
 
 		for(int i = 0; i < *vertexNum; i++) {
-
 			fwrite(matrix[i], sizeof(int), *vertexNum, fp);
-		/*
-			for(int j = 0; j < *vertexNum; j++) {
-				fprintf(fp, "%d ", matrix[i][j]);
-			
-			}*/
 		}
 		fclose(fp);
 	}
